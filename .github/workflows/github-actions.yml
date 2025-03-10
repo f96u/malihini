@@ -1,0 +1,16 @@
+name: lint test build
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.15.1
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Run test
+        run: npm run test
