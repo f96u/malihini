@@ -1,21 +1,28 @@
-// import { GoogleGenerativeAI } from '@google/generative-ai';
+'use client'
+import { useEffect, useState } from "react"
 
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? '');
-
-async function run() {
-  // const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
-  // const prompt = "Gemini APIについて教えてください。"
-
-  // NOTE: CIのためにコメントアウト
-  // const result = await model.generateContent(prompt)
-  // const response = await result.response
-  // const text = response.text()
-  // return text
-  return 'Gemini APIは、Googleが提供する自然言語生成AIです。'
-}
-
-export default async function GeminiSample() {
-  const apiResult = await run()
+export default function GeminiSample() {
+  const [ apiResult, setApiResult ] = useState('')
+  useEffect(() => {
+    (async () => {
+      const res = await fetch('/api/generateContent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: 'Hello, Gemini!' }),
+      })
+      const reader = res.body?.getReader()
+      if (!reader) return
+      const decoder = new TextDecoder()
+      while (true) {
+        const { done, value } = await reader?.read()
+        if (done) break
+        setApiResult(apiResult => apiResult + decoder.decode(value))
+      }
+    }
+    )()
+  }, [])
   return (
     <div>
       {apiResult}
