@@ -1,28 +1,12 @@
 'use client'
-import { useEffect } from 'react'
-import { Loader } from '@googlemaps/js-api-loader'
+import { AdvancedMarker, APIProvider, Map } from '@vis.gl/react-google-maps'
+
 export default function MapSample() {
-
-  useEffect(() => {
-    console.log('API_KEY:', process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY)
-    const loader = new Loader({
-      apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY || '',
-      version: 'weekly',
-    })
-    loader
-      .importLibrary('maps')
-      .then(({ Map }) => {
-        new Map(document.getElementById('map') as HTMLElement, {
-          center: { lat: -34.397, lng: 150.644 },
-          zoom: 8,
-        })
-      })
-  }, [])
-
   return (
-    <>
-      <h1>Map Sample</h1>
-      <div id="map" style={{ width: '100%', height: '400px' }} />
-    </>
+    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY || ''}>
+      <Map defaultCenter={{ lat: -34.397, lng: 150.644 }} defaultZoom={8} mapId="map">
+        <AdvancedMarker position={{ lat: -34.397, lng: 150.644 }} />
+      </Map>
+    </APIProvider>
   )
 }
