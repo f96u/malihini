@@ -1,4 +1,4 @@
-import { Chat } from "@/components/Chat";
+import { ChatWidget } from "@/components/ChatWidget";
 import { Count } from "@/components/Count";
 import MapSample from "@/components/MapSample";
 
@@ -8,7 +8,7 @@ export default function Home() {
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
         <Count />
         <MapSample />
-        <Chat />
+        <ChatWidget />
       </main>
     </div>
   );
