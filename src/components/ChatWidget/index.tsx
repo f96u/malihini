@@ -3,6 +3,9 @@ import { Content } from "@google/generative-ai"
 import { PaperPlaneIcon } from "@radix-ui/react-icons"
 import { Form } from 'radix-ui'
 import { useState } from "react"
+import { useSetAtom } from 'jotai'
+import { locationsAtom } from '@/atoms'
+import { extractPlacesFromBotResponse } from '@/utils/placeExtractor'
 
 export function ChatWidget() {
   const [history, setHistory] = useState<Content[]>([{
@@ -10,6 +13,7 @@ export function ChatWidget() {
     parts: [{ text: 'Hello! How can I help you today?' }],
   }])
   const [lastBotMessage, setLastBotMessage] = useState('')
+  const setLocations = useSetAtom(locationsAtom)
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -31,8 +35,19 @@ export function ChatWidget() {
     while (true) {
       const { done, value } = await reader?.read()
       if (done) {
-        setHistory(history => [...history, { role: 'bot', parts: [{ text: generateChar }] }])
+        const finalMessage = generateChar
+        setHistory(history => [...history, { role: 'bot', parts: [{ text: finalMessage }] }])
         setLastBotMessage('')
+        
+        // Botの応答から場所の情報を抽出して地図に追加
+        try {
+          const locations = await extractPlacesFromBotResponse(finalMessage)
+          if (locations.length > 0) {
+            setLocations(prev => [...prev, ...locations])
+          }
+        } catch (error) {
+          console.error('Error extracting places from bot response:', error)
+        }
         break
       }
       const decoded = decoder.decode(value)
@@ -55,7 +70,7 @@ export function ChatWidget() {
         ))}
         <li>{lastBotMessage}</li>
       </ul>
-      <Form.Root className="flex gap-2 w-full" onSubmit={handleSubmit}>
+      <Form.Root className="flex gap-2 w-full mt-4" onSubmit={handleSubmit}>
         <Form.Field asChild name="message">
           <Form.Control asChild>
             <input
