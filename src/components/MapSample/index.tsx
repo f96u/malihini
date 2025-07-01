@@ -10,16 +10,16 @@ export default function MapSample() {
 
   // 地図の位置とズームを独立して管理
   const [mapCenter, setMapCenter] = useState({ lat: 35.6812, lng: 139.7644 }); // 東京駅
-  const [mapZoom, setMapZoom] = useState(7);
+  const [mapZoom, setMapZoom] = useState(10);
 
   // 初期表示時またはlocationsが変更された時に地図の位置を更新
   useEffect(() => {
     if (locations.length === 0) {
       setMapCenter({ lat: 35.6812, lng: 139.7644 }); // 東京駅
-      setMapZoom(7); // 日本全体
+      setMapZoom(10);
     } else if (locations.length === 1) {
       setMapCenter({ lat: locations[0].lat, lng: locations[0].lng });
-      setMapZoom(10); // 単一の場所
+      setMapZoom(12); // 単一の場所
     } else {
       const lats = locations.map(loc => loc.lat);
       const lngs = locations.map(loc => loc.lng);
@@ -28,7 +28,7 @@ export default function MapSample() {
       const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
       
       setMapCenter({ lat: centerLat, lng: centerLng });
-      setMapZoom(8); // 複数の場所
+      setMapZoom(11); // 複数の場所
     }
   }, [locations]);
 
@@ -55,9 +55,6 @@ export default function MapSample() {
           }}
           style={{ width: '100%', height: '400px' }}
         >
-          {/* デフォルトのマーカー */}
-          <AdvancedMarker position={{ lat: 35.6812, lng: 139.7644 }} title="東京駅" />
-          
           {/* チャットから抽出された場所のマーカー */}
           {locations.map((location, index) => (
             <AdvancedMarker 
