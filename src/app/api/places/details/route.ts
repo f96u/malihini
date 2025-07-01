@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Place ID is required' }, { status: 400 });
     }
 
-    const apiKey = process.env.BACKEND_GOOGLE_MAPS_API_KEY;
+    const apiKey = process.env.BACKEND_GOOGLE_MAP_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: 'Google Maps API key is not configured' }, { status: 500 });
     }
