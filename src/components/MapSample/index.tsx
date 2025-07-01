@@ -2,31 +2,34 @@
 import { AdvancedMarker, APIProvider, Map } from '@vis.gl/react-google-maps'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { locationsAtom } from '@/atoms'
-import { useMemo } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function MapSample() {
   const locations = useAtomValue(locationsAtom)
   const setLocations = useSetAtom(locationsAtom)
 
-  // 地図の中心とズームレベルを計算
-  const mapCenter = useMemo(() => {
-    if (locations.length === 0) {
-      return { lat: 35.6812, lng: 139.7644 }; // 東京駅
-    }
-    
-    const lats = locations.map(loc => loc.lat);
-    const lngs = locations.map(loc => loc.lng);
-    
-    const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
-    const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
-    
-    return { lat: centerLat, lng: centerLng };
-  }, [locations]);
+  // 地図の位置とズームを独立して管理
+  const [mapCenter, setMapCenter] = useState({ lat: 35.6812, lng: 139.7644 }); // 東京駅
+  const [mapZoom, setMapZoom] = useState(7);
 
-  const mapZoom = useMemo(() => {
-    if (locations.length === 0) return 5; // 日本全体
-    if (locations.length === 1) return 10; // 単一の場所
-    return 6; // 複数の場所
+  // 初期表示時またはlocationsが変更された時に地図の位置を更新
+  useEffect(() => {
+    if (locations.length === 0) {
+      setMapCenter({ lat: 35.6812, lng: 139.7644 }); // 東京駅
+      setMapZoom(7); // 日本全体
+    } else if (locations.length === 1) {
+      setMapCenter({ lat: locations[0].lat, lng: locations[0].lng });
+      setMapZoom(10); // 単一の場所
+    } else {
+      const lats = locations.map(loc => loc.lat);
+      const lngs = locations.map(loc => loc.lng);
+      
+      const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+      const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+      
+      setMapCenter({ lat: centerLat, lng: centerLng });
+      setMapZoom(8); // 複数の場所
+    }
   }, [locations]);
 
   const clearLocations = () => {
@@ -40,6 +43,16 @@ export default function MapSample() {
           center={mapCenter}
           zoom={mapZoom}
           mapId="map"
+          gestureHandling="greedy"
+          disableDefaultUI={false}
+          zoomControl={true}
+          scrollwheel={true}
+          onCameraChanged={(ev) => {
+            const center = ev.detail.center;
+            const zoom = ev.detail.zoom;
+            setMapCenter({ lat: center.lat, lng: center.lng });
+            setMapZoom(zoom);
+          }}
           style={{ width: '100%', height: '400px' }}
         >
           {/* デフォルトのマーカー */}
