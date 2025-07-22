@@ -4,19 +4,77 @@ import { useAtomValue, useSetAtom } from 'jotai'
 import { locationsAtom } from '@/atoms'
 import { useState, useEffect } from 'react'
 
+// デフォルト位置（東京駅）
+const DEFAULT_POSITION = { lat: 35.6812, lng: 139.7644 };
+
 export default function MapSample() {
   const locations = useAtomValue(locationsAtom)
   const setLocations = useSetAtom(locationsAtom)
 
   // 地図の位置とズームを独立して管理
-  const [mapCenter, setMapCenter] = useState({ lat: 35.6812, lng: 139.7644 }); // 東京駅
+  const [mapCenter, setMapCenter] = useState(DEFAULT_POSITION);
   const [mapZoom, setMapZoom] = useState(10);
 
-  // 初期表示時またはlocationsが変更された時に地図の位置を更新
+  // 現在位置を取得する関数
+  const getCurrentPosition = (): Promise<{ lat: number; lng: number }> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.warn('位置情報の取得に失敗しました:', error.message);
+          reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    });
+  };
+
+  // 初期表示時に現在位置を取得
+  useEffect(() => {
+    const initializeMapPosition = async () => {
+      try {
+        const currentPosition = await getCurrentPosition();
+        setMapCenter(currentPosition);
+        setMapZoom(12); // 現在位置では少しズームを上げる
+      } catch {
+        // 位置情報取得に失敗した場合はデフォルト位置（東京駅）を使用
+        console.log('デフォルト位置（東京駅）を使用します');
+        setMapCenter(DEFAULT_POSITION);
+        setMapZoom(10);
+      }
+    };
+
+    initializeMapPosition();
+  }, []);
+
+  // locationsが変更された時に地図の位置を更新
   useEffect(() => {
     if (locations.length === 0) {
-      setMapCenter({ lat: 35.6812, lng: 139.7644 }); // 東京駅
-      setMapZoom(10);
+      // 場所がクリアされた場合は現在位置に戻す
+      getCurrentPosition()
+        .then(currentPosition => {
+          setMapCenter(currentPosition);
+          setMapZoom(12);
+        })
+        .catch(() => {
+          // 失敗した場合はデフォルト位置
+          setMapCenter(DEFAULT_POSITION);
+          setMapZoom(10);
+        });
     } else if (locations.length === 1) {
       setMapCenter({ lat: locations[0].lat, lng: locations[0].lng });
       setMapZoom(12); // 単一の場所
