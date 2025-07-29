@@ -12,3 +12,6 @@ export interface Location {
 }
 
 export const locationsAtom = atom<Location[]>([]);
+
+// チャットメッセージ送信用のatom
+export const chatMessageAtom = atom<string | null>(null);
