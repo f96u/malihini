@@ -2,9 +2,9 @@
 import { Content } from "@google/generative-ai"
 import { PaperPlaneIcon } from "@radix-ui/react-icons"
 import { Form } from 'radix-ui'
-import { useState } from "react"
-import { useSetAtom } from 'jotai'
-import { locationsAtom } from '@/atoms'
+import { useState, useEffect, useRef } from "react"
+import { useSetAtom, useAtom } from 'jotai'
+import { locationsAtom, chatMessageAtom } from '@/atoms'
 import { extractPlacesFromBotResponse } from '@/utils/placeExtractor'
 
 export function ChatWidget() {
@@ -14,7 +14,24 @@ export function ChatWidget() {
   }])
   const [lastBotMessage, setLastBotMessage] = useState('')
   const setLocations = useSetAtom(locationsAtom)
+  const [chatMessage, setChatMessage] = useAtom(chatMessageAtom)
+  const formRef = useRef<HTMLFormElement>(null)
   
+  // jotaiのchatMessageAtomを監視して自動送信
+  useEffect(() => {
+    if (chatMessage && formRef.current) {
+      // フォームのinput要素にメッセージを設定
+      const input = formRef.current.querySelector('input[name="message"]') as HTMLInputElement;
+      if (input) {
+        input.value = chatMessage;
+        // フォームを自動送信
+        formRef.current.requestSubmit();
+        // メッセージをリセット
+        setChatMessage(null);
+      }
+    }
+  }, [chatMessage, setChatMessage]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const prompt = e.currentTarget.message.value;
@@ -70,7 +87,7 @@ export function ChatWidget() {
         ))}
         <li>{lastBotMessage}</li>
       </ul>
-      <Form.Root className="flex gap-2 w-full mt-4" onSubmit={handleSubmit}>
+      <Form.Root ref={formRef} className="flex gap-2 w-full mt-4" onSubmit={handleSubmit}>
         <Form.Field asChild name="message">
           <Form.Control asChild>
             <input
